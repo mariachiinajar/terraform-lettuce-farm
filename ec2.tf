@@ -30,6 +30,14 @@ resource "aws_security_group" "public" {
     cidr_blocks = ["211.237.245.156/32"]
   }
 
+  ingress {
+    description = "HTTP access from local machine"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["211.237.245.156/32"]
+  }
+
   # traffic goes out to the internet, to all clients. 
   egress {
     from_port   = 0
@@ -46,85 +54,86 @@ resource "aws_security_group" "public" {
 }
 
 resource "aws_instance" "public" {
-  count = length(var.public_subnet_cidr_blocks)
+  # count = length(var.public_subnet_cidr_blocks)
 
   ami                         = data.aws_ami.amazonlinux.id
   instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.public[count.index].id
+  subnet_id                   = aws_subnet.public[0].id
   vpc_security_group_ids      = [aws_security_group.public.id]
   associate_public_ip_address = true
+  user_data                   = file("userdata.sh")
   key_name                    = "greenhouse"
-  # putin_khuylo                = true
 
   tags = {
-    Name        = "PublicAppServer-${count.index}"
+    Name        = "PublicAppServer"
     environment = var.environment[0]
     terraform   = var.terraform
   }
 }
 
-resource "aws_security_group" "private" {
-  name        = "private"
-  description = "Allows traffic within VPC"
-  vpc_id      = aws_vpc.main.id
+resource "aws_instance" "public-test" {
+  # count = length(var.public_subnet_cidr_blocks)
 
-  ingress {
-    description = "ssh from VPC"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr_block]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name        = "private"
-    environment = var.environment[0]
-    terraform   = var.terraform
-  }
-}
-
-resource "aws_instance" "private0" {
-  count                       = length(var.private_subnet_cidr_blocks)
   ami                         = data.aws_ami.amazonlinux.id
-  instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.private[count.index].id
-  vpc_security_group_ids      = [aws_security_group.private.id]
-  associate_public_ip_address = false
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public[0].id
+  vpc_security_group_ids      = [aws_security_group.public.id]
+  associate_public_ip_address = true
+  user_data                   = file("userdata.sh")
   key_name                    = "greenhouse"
-  # putin_khuylo                = true
 
   tags = {
-    Name        = "private-${var.environment[0]}"
+    Name        = "PublicAppServer-test"
     environment = var.environment[0]
     terraform   = var.terraform
   }
 }
 
-resource "aws_instance" "private1" {
-  count                       = length(var.private_subnet_cidr_blocks)
-  ami                         = data.aws_ami.amazonlinux.id
-  instance_type               = "t3.micro"
-  subnet_id                   = aws_subnet.private[count.index].id
-  vpc_security_group_ids      = [aws_security_group.private.id]
-  associate_public_ip_address = false
-  key_name                    = "greenhouse"
-  # putin_khuylo                = true
+# resource "aws_security_group" "private" {
+#   name        = "private"
+#   description = "Allows traffic within VPC"
+#   vpc_id      = aws_vpc.main.id
 
-  tags = {
-    Name        = "private-${var.environment[1]}"
-    environment = var.environment[1]
-    terraform   = var.terraform
-  }
-}
+#   ingress {
+#     description = "ssh from VPC"
+#     from_port   = 22
+#     to_port     = 22
+#     protocol    = "tcp"
+#     cidr_blocks = [var.vpc_cidr_block]
+#   }
 
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   tags = {
+#     Name        = "private"
+#     environment = var.environment[0]
+#     terraform   = var.terraform
+#   }
+# }
+
+# resource "aws_instance" "private" {
+#   # count                       = length(var.private_subnet_cidr_blocks)
+#   ami                         = data.aws_ami.amazonlinux.id
+#   instance_type               = "t2.micro"
+#   subnet_id                   = aws_subnet.private[0].id
+#   vpc_security_group_ids      = [aws_security_group.private.id]
+#   associate_public_ip_address = false
+#   key_name                    = "greenhouse"
+#   # putin_khuylo                = true
+
+#   tags = {
+#     Name        = "private-${var.environment[0]}"
+#     environment = var.environment[0]
+#     terraform   = var.terraform
+#   }
+# }
 
 output "public_ip_address" {
-  value = aws_instance.public[*].public_ip
+  value = aws_instance.public.public_ip
 }
+
