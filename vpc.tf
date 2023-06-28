@@ -3,7 +3,9 @@ resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr_block
 
   tags = {
-    Name = "greenhouse"
+    Name        = "greenhouse"
+    environment = var.environment[0]
+    terraform   = var.terraform
   }
 }
 
@@ -18,7 +20,9 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "public"
+    Name        = "public"
+    environment = var.environment[0]
+    terraform   = var.terraform
   }
 }
 
@@ -32,7 +36,9 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "private"
+    Name        = "private"
+    environment = var.environment[0]
+    terraform   = var.terraform
   }
 }
 
@@ -41,7 +47,9 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "internet gw"
+    Name        = "internet gw"
+    environment = var.environment[0]
+    terraform   = var.terraform
   }
 }
 
@@ -51,7 +59,9 @@ resource "aws_eip" "nat" {
   vpc   = true
 
   tags = {
-    Name = "elastic-IP-${count.index}"
+    Name        = "elastic-IP-${count.index}"
+    environment = var.environment[0]
+    terraform   = var.terraform
   }
 }
 
@@ -62,7 +72,9 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = aws_subnet.public[count.index].id
 
   tags = {
-    Name = "nat-gw-${count.index}"
+    Name        = "nat-gw-${count.index}"
+    environment = var.environment[0]
+    terraform   = var.terraform
   }
 }
 
@@ -78,7 +90,9 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "public"
+    Name        = "public"
+    environment = var.environment[0]
+    terraform   = var.terraform
   }
 }
 
@@ -96,7 +110,9 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name = "private-${count.index}"
+    Name        = "private-${count.index}"
+    environment = var.environment[0]
+    terraform   = var.terraform
   }
 }
 
